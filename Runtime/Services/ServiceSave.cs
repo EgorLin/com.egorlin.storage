@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using EgorLin.DIsolated.LifeCycle;
 using EgorLin.Storage.Save;
 using EgorLin.Storage.Serializer;
 using EgorLin.Storage.StateMigrations;
