@@ -1,0 +1,14 @@
+{
+  "name": "com.egorlin.storage",
+  "rootNamespace": "EgorLin.Storage",
+  "references": ["GUID:0eceaeb7ffa1f3e16a339493785bb798"],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
