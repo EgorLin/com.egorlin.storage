@@ -1,7 +1,12 @@
+using EgorLin.Storage.Save;
+
 namespace EgorLin.Storage.Services
 {
 	public interface IServiceSave
 	{
-		void LoadDocument();
+		SaveDomain Domain { get; }
+		void Initialize();
+		void Save(IStateHandle handle);
+		void Load(IStateHandle handle);
 	}
 }

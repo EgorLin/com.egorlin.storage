@@ -1,61 +1,73 @@
-using System;
 using System.Collections.Generic;
 using EgorLin.DIsolated.LifeCycle;
+using EgorLin.Storage.Data.Configs;
 using EgorLin.Storage.Save;
 using EgorLin.Storage.Serializer;
 using EgorLin.Storage.StateMigrations;
 using EgorLin.Storage.Storage;
-using UnityEngine;
+using EgorLin.Storage.Time;
 
 namespace EgorLin.Storage.Services
 {
-	public class ServiceSave : IServiceSave, ISchedulerSave, ITickable
+	public class ServiceSave : IServiceSave, ITickable
 	{
-		private const float TotalCooldownLocal = 1f;
-		private const string SaveDocumentLocal = "save_document";
-
-		private readonly IStorageLocal _storageLocal;
+		private readonly ConfigSaveService _configSaveService;
+		private readonly IStorage _storage;
 		private readonly ISerializerSave _serializerSave;
-		private readonly HashSet<IStateHandle> _handlersSaveLocal = new();
+		private readonly IProviderTime _providerTime;
 
-		private SaveDocument _saveDocumentLocal;
+		private readonly HashSet<IStateHandle> _handlersSave = new();
 		
-		private float _currentCooldownLocal;
+		private SaveDocument _saveDocument;
+		
+		private float _currentCooldown;
 
-		public ServiceSave(IStorageLocal storageLocal, ISerializerSave serializerSave)
+		public SaveDomain Domain => _configSaveService.Domain;
+
+		public ServiceSave(ConfigSaveService configSaveService, IStorage storage, ISerializerSave serializerSave,
+			IProviderTime providerTime)
 		{
-			_storageLocal = storageLocal;
+			_configSaveService = configSaveService;
+			_storage = storage;
 			_serializerSave = serializerSave;
+			_providerTime = providerTime;
 		}
 
-		public void LoadDocument()
+		public void Initialize()
 		{
-			if (_storageLocal.Has(SaveDocumentLocal))
+			if (_storage.Has(_configSaveService.Key))
 			{
-				var rawSaveDocument = _storageLocal.Get(SaveDocumentLocal);
-				_saveDocumentLocal = _serializerSave.Deserialize<SaveDocument>(rawSaveDocument);
+				var rawSaveDocument = _storage.Get(_configSaveService.Key);
+				_saveDocument = _serializerSave.Deserialize<SaveDocument>(rawSaveDocument);
 			}
 			else
 			{
-				_saveDocumentLocal = new SaveDocument();
+				_saveDocument = new SaveDocument();
 			}
 		}
-			
-		public void Save(IStateHandle handle)
+
+		public void Tick()
 		{
-			if (handle.Domain == SaveDomain.Local)
+			_currentCooldown += _providerTime.DeltaTick;
+
+			if (_currentCooldown >= _configSaveService.Cooldown && _handlersSave.Count > 0)
 			{
-				_handlersSaveLocal.Add(handle);
+				_currentCooldown = 0f;
+
+				SaveStates();
 			}
 		}
 
 		public void Load(IStateHandle handle)
 		{
-			if (_saveDocumentLocal.MapStates.TryGetValue(handle.Key, out var data))
+			if (_saveDocument.MapStates.TryGetValue(handle.Key, out var data))
 			{
 				handle.Load(_serializerSave, data);
-				
-				var stateMigration = _saveDocumentLocal.MapMigration[handle.Key];
+
+				if (!_saveDocument.MapMigration.TryGetValue(handle.Key, out var stateMigration))
+				{
+					stateMigration = new StateMigration();
+				}
 
 				if (stateMigration.Version < handle.CurrentVersion)
 				{
@@ -70,44 +82,37 @@ namespace EgorLin.Storage.Services
 			}
 		}
 
-		public void Tick()
+		public void Save(IStateHandle handle)
 		{
-			_currentCooldownLocal += Time.deltaTime;
-
-			if (_currentCooldownLocal >= TotalCooldownLocal && _handlersSaveLocal.Count > 0)
-			{
-				_currentCooldownLocal = 0f;
-
-				SaveStatesLocal();
-			}
+			_handlersSave.Add(handle);
 		}
 
-		private void SaveStatesLocal()
+		private void SaveStates()
 		{
-			foreach (var stateHandle in _handlersSaveLocal)
+			foreach (var stateHandle in _handlersSave)
 			{
 				var data = stateHandle.Save(_serializerSave);
 					
-				_saveDocumentLocal.MapStates[stateHandle.Key] = data;
+				_saveDocument.MapStates[stateHandle.Key] = data;
 			}
 
-			_saveDocumentLocal.BinaryTimestampUtc = DateTime.UtcNow.ToBinary();
+			_saveDocument.BinaryTimestampUtc = _providerTime.TimeNowUtc.ToBinary();
 				
-			var saveDocumentSerialized = _serializerSave.Serialize(_saveDocumentLocal);
+			var saveDocumentSerialized = _serializerSave.Serialize(_saveDocument);
 				
-			_storageLocal.Set(SaveDocumentLocal, saveDocumentSerialized);
-			_storageLocal.Save();
+			_storage.Set(_configSaveService.Key, saveDocumentSerialized);
+			_storage.Save();
 				
-			_handlersSaveLocal.Clear();
+			_handlersSave.Clear();
 		}
 
 		private void Migrate(IStateHandle stateHandle, StateMigration stateMigration)
 		{
 			stateHandle.Migrate(stateMigration);
 					
-			_saveDocumentLocal.MapMigration[stateHandle.Key] = stateMigration;
+			_saveDocument.MapMigration[stateHandle.Key] = stateMigration;
 					
-			_handlersSaveLocal.Add(stateHandle);
+			_handlersSave.Add(stateHandle);
 		}
 	}
 }

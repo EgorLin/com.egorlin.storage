@@ -9,7 +9,7 @@ namespace EgorLin.Storage.Editor
     {
         private static readonly Dictionary<string, string> Packages = new()
         {
-            { "com.egorlin.disolated", "https://github.com/egorlin/com.egorlin.disolated.git#1.0.0" },
+            { "com.egorlin.disolated", "https://github.com/egorlin/com.egorlin.disolated.git#1.1.0" },
         };
 
         static DependenciesInstaller()

@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace EgorLin.Storage.Storage
 {
-	public class StorageLocalPlayerPrefs : IStorageLocal
+	public class StoragePlayerPrefs : IStorage
 	{
 		public bool Has(string key)
 		{
