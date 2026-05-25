@@ -1,6 +1,6 @@
 {
   "name": "com.egorlin.storage",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "displayName": "Storage",
   "description": "C# Storage and states",
   "unity": "6000.3",
