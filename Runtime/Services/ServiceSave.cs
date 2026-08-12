@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using EgorLin.DIsolated.LifeCycle;
 using EgorLin.Storage.Data.Configs;
 using EgorLin.Storage.Save;
 using EgorLin.Storage.Serializer;
@@ -9,7 +8,7 @@ using EgorLin.Storage.Time;
 
 namespace EgorLin.Storage.Services
 {
-	public class ServiceSave : IServiceSave, ITickable
+	public class ServiceSave : IServiceSave
 	{
 		private readonly ConfigSaveService _configSaveService;
 		private readonly IStorage _storage;

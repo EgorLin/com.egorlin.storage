@@ -1,3 +1,4 @@
+#if STORAGE_DISOLATATED
 using EgorLin.DIsolated.Core;
 using EgorLin.DIsolated.Core.Extensions;
 using EgorLin.Storage.StateMigrations;
@@ -69,3 +70,4 @@ namespace EgorLin.Storage.Extensions
         }
     }
 }
+#endif

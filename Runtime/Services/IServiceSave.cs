@@ -8,5 +8,6 @@ namespace EgorLin.Storage.Services
 		void Initialize();
 		void Save(IStateHandle handle);
 		void Load(IStateHandle handle);
+		void Tick();
 	}
 }
