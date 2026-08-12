@@ -1,5 +1,0 @@
-{
-  "name": "com.egorlin.storage.Editor",
-  "rootNamespace": "EgorLin.Storage",
-  "includePlatforms": ["Editor"]
-}
